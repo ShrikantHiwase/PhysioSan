@@ -17,7 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'react-native';
-import { PhysioColors, PhysioFontSize, PhysioTouchTarget, PhysioShadow } from '../../src/constants/physioTheme';
+import { PhysioColors, PhysioFontSize, PhysioTouchTarget, PhysioShadow, PhysioSpacing } from '../../src/constants/physioTheme';
 import { PHYSIO_EXERCISES, PhysioExercise } from '../../src/data/physioExercises';
 import { getExerciseGifSource } from '../../src/data/exerciseGifs';
 import { supabase, isSupabaseConfigured } from '../../src/lib/supabase';
@@ -277,7 +277,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: PhysioColors.surface,
     borderRadius: 16,
-    padding: PhysioTouchTarget.large,
+    padding: PhysioSpacing.xl,
     marginBottom: 12,
     borderWidth: 1,
     borderColor: PhysioColors.cardBorder,
@@ -289,8 +289,8 @@ const styles = StyleSheet.create({
     backgroundColor: PhysioColors.surfaceLight,
   },
   exerciseIcon: {
-    width: 52,
-    height: 52,
+    width: 64,
+    height: 64,
     borderRadius: 14,
     backgroundColor: PhysioColors.primary + '15',
     justifyContent: 'center',
@@ -312,15 +312,15 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   exerciseDescription: {
-    fontSize: PhysioFontSize.md,
+    fontSize: PhysioFontSize.lg,
     color: PhysioColors.textSecondary,
-    lineHeight: 22,
+    lineHeight: 24,
   },
   exerciseMeta: {
     marginTop: 8,
   },
   exerciseMetaText: {
-    fontSize: PhysioFontSize.sm,
+    fontSize: PhysioFontSize.md,
     color: PhysioColors.primary,
     fontWeight: '600',
   },
