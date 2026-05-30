@@ -53,9 +53,20 @@ export default function ExercisePlayerScreen() {
   const [holdCountdown, setHoldCountdown] = useState(0);
   const [voiceCue, setVoiceCue] = useState('');
   const [showPainModal, setShowPainModal] = useState(false);
+  const [exerciseComplete, setExerciseComplete] = useState(false);
+  const [nextExercise, setNextExercise] = useState<{ id: string, name: string, gif_url?: string, video_url?: string } | null>(null);
   const holdIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
+    // Determine next exercise
+    const currentIndex = PHYSIO_EXERCISES.findIndex(e => e.id === exercise.id);
+    if (currentIndex !== -1 && currentIndex < PHYSIO_EXERCISES.length - 1) {
+      const next = PHYSIO_EXERCISES[currentIndex + 1];
+      setNextExercise({ id: next.id, name: next.name, gif_url: next.gif_url, video_url: next.video_url });
+    } else {
+      setNextExercise(null);
+    }
+
     getPrescription(exercise.id).then((p) => {
       if (p) {
         setSets(String(p.sets));
@@ -105,10 +116,26 @@ export default function ExercisePlayerScreen() {
     await logExerciseCompletion(exercise.id, repsNum, painLevel);
     if (currentSet >= setsNum) {
       setVoiceCue('All sets complete!');
-      setCurrentSet(1);
+      setExerciseComplete(true);
     } else {
       setCurrentSet((c) => c + 1);
       setVoiceCue(`Set ${currentSet + 1} of ${setsNum}. Ready when you are.`);
+    }
+  };
+
+  const handleNextExercise = () => {
+    if (nextExercise) {
+      router.replace({
+        pathname: '/exercise/[id]',
+        params: {
+          id: nextExercise.id,
+          name: nextExercise.name,
+          gif_url: nextExercise.gif_url ?? '',
+          video_url: nextExercise.video_url ?? '',
+        },
+      });
+    } else {
+      router.back();
     }
   };
 
@@ -249,29 +276,43 @@ export default function ExercisePlayerScreen() {
           <Text style={styles.timerValue}>
             {Math.floor(timerSeconds / 60)}:{(timerSeconds % 60).toString().padStart(2, '0')}
           </Text>
-          <View style={styles.controlRow}>
-            <Pressable
-              onPress={() => setIsRunning(!isRunning)}
-              style={[styles.timerBtn, styles.timerBtnHalf]}
-            >
-              <Text style={styles.timerBtnText}>{isRunning ? 'Pause' : 'Start'}</Text>
-            </Pressable>
-            {holdNum > 0 && (
+          {!exerciseComplete ? (
+            <>
+              <View style={styles.controlRow}>
+                <Pressable
+                  onPress={() => setIsRunning(!isRunning)}
+                  style={[styles.timerBtn, styles.timerBtnHalf]}
+                >
+                  <Text style={styles.timerBtnText}>{isRunning ? 'Pause' : 'Start'}</Text>
+                </Pressable>
+                {holdNum > 0 && (
+                  <Pressable
+                    onPress={startHold}
+                    disabled={phase === 'hold'}
+                    style={[styles.timerBtn, styles.timerBtnHalf, phase === 'hold' && styles.btnDisabled]}
+                  >
+                    <Text style={styles.timerBtnText}>Hold {holdNum}s</Text>
+                  </Pressable>
+                )}
+              </View>
               <Pressable
-                onPress={startHold}
-                disabled={phase === 'hold'}
-                style={[styles.timerBtn, styles.timerBtnHalf, phase === 'hold' && styles.btnDisabled]}
+                onPress={completeSet}
+                style={[styles.completeBtn, { minHeight: PhysioTouchTarget.large }]}
               >
-                <Text style={styles.timerBtnText}>Hold {holdNum}s</Text>
+                <Text style={styles.completeBtnText}>Complete Set</Text>
               </Pressable>
-            )}
-          </View>
-          <Pressable
-            onPress={completeSet}
-            style={[styles.completeBtn, { minHeight: PhysioTouchTarget.large }]}
-          >
-            <Text style={styles.completeBtnText}>Complete Set</Text>
-          </Pressable>
+            </>
+          ) : (
+            <Pressable
+              onPress={handleNextExercise}
+              style={[styles.nextBtn, { minHeight: PhysioTouchTarget.large }]}
+            >
+              <Text style={styles.nextBtnText}>
+                {nextExercise ? `Next: ${nextExercise.name}` : 'Done for Today'}
+              </Text>
+              <Ionicons name={nextExercise ? "arrow-forward" : "checkmark"} size={20} color="#fff" />
+            </Pressable>
+          )}
         </View>
       </ScrollView>
 
@@ -428,6 +469,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   completeBtnText: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  nextBtn: {
+    marginTop: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 14,
+    backgroundColor: PhysioColors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8,
+  },
+  nextBtnText: {
     fontSize: 17,
     fontWeight: '700',
     color: '#fff',

@@ -33,7 +33,7 @@ export default function SignInScreen() {
           </View>
           <Text style={styles.brand}>PhysioSan</Text>
         </View>
-        <Text style={styles.tagline}>Your rehabilitation companion</Text>
+        <Text style={styles.tagline}>Digital Rehabilitation App</Text>
       </View>
 
       <View style={[styles.card, { paddingBottom: insets.bottom + 24 }]}>

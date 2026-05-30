@@ -15,3 +15,12 @@ export async function logExerciseCompletion(
     [id, USER_ID, exerciseId, repsCompleted, painLevel]
   );
 }
+
+export async function logDailyPain(painLevel: number): Promise<void> {
+  const db = await getDatabase();
+  const id = uuidv4();
+  await db.runAsync(
+    `INSERT INTO logs (id, user_id, exercise_id, reps_completed, pain_level, timestamp) VALUES (?, ?, ?, ?, ?, datetime('now'))`,
+    [id, USER_ID, 'daily-check-in', 0, painLevel]
+  );
+}
