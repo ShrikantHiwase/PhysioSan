@@ -41,7 +41,7 @@ export default function RootLayout() {
           <Ionicons name="fitness" size={56} color={PhysioColors.primary} />
         </View>
         <Text style={styles.brand}>PhysioSan</Text>
-        <Text style={styles.tagline}>Your rehabilitation companion</Text>
+        <Text style={styles.tagline}>Digital Rehabilitation App</Text>
         <ActivityIndicator size="large" color={PhysioColors.primary} style={styles.spinner} />
       </View>
     );

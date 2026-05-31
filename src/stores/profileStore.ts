@@ -21,7 +21,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
   loadProfile: async () => {
     try {
       const db = await getDatabase();
-      const row = await db.getFirstAsync<any>(
+      const row = await db.getFirstAsync<{ id: string; name: string; surgery_date: string | null; fracture_type: string | null; created_at: string; updated_at: string }>(
         'SELECT * FROM profiles WHERE id = ?',
         [DEFAULT_PROFILE_ID]
       );

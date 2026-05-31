@@ -4,7 +4,7 @@
  */
 import React, { useEffect, useState, useCallback } from 'react';
 import {
-  View, Text, ScrollView, StyleSheet, Pressable, RefreshControl, Dimensions,
+  View, Text, ScrollView, StyleSheet, Pressable, RefreshControl, Dimensions, Share, Alert
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -81,8 +81,33 @@ export default function ProgressScreen() {
           }
         >
         <View style={styles.header}>
-          <Text style={styles.title}>Progress</Text>
-          <Text style={styles.subtitle}>Track your recovery metrics</Text>
+          <View style={styles.headerTop}>
+            <View>
+              <Text style={styles.title}>Progress</Text>
+              <Text style={styles.subtitle}>Track your recovery metrics</Text>
+            </View>
+            <Pressable
+              onPress={async () => {
+                try {
+                  const dashStr = dashData.length > 0 ? `Latest QuickDASH: ${dashData[dashData.length - 1].value}\n` : '';
+                  const romStr = romData.length > 0 ? `Latest ROM: ${romData[romData.length - 1].value}°\n` : '';
+                  const surgeryStr = profile?.surgery_date ? `Surgery Date: ${profile.surgery_date}\n` : '';
+
+                  const message = `Patient Progress Report\n\n${surgeryStr}${dashStr}${romStr}`;
+
+                  await Share.share({
+                    message: message,
+                    title: 'Progress Report',
+                  });
+                } catch (error: any) {
+                  Alert.alert('Error', error.message);
+                }
+              }}
+              style={styles.shareBtn}
+            >
+              <Ionicons name="share-outline" size={24} color={PhysioColors.primary} />
+            </Pressable>
+          </View>
         </View>
 
         {/* QuickDASH */}
@@ -193,6 +218,8 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: PhysioColors.background },
   scrollContent: { paddingHorizontal: 20, paddingBottom: 24 },
   header: { marginTop: 24, marginBottom: 28 },
+  headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  shareBtn: { padding: 8 },
   title: { fontSize: 28, fontWeight: '700', color: PhysioColors.textPrimary },
   subtitle: { fontSize: 15, color: PhysioColors.textSecondary, marginTop: 6 },
   card: {

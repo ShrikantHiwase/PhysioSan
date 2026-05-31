@@ -18,8 +18,8 @@ interface PrescriptionState {
 export const usePrescriptionStore = create<PrescriptionState>((set, get) => ({
   getPrescription: async (exerciseId: string) => {
     const db = await getDatabase();
-    const row = await db.getFirstAsync<any>(
-      'SELECT * FROM exercise_prescriptions WHERE user_id = ? AND exercise_id = ?',
+    const row = await db.getFirstAsync<{ exercise_id: string; sets: number; reps: number; hold_seconds: number }>(
+      'SELECT exercise_id, sets, reps, hold_seconds FROM exercise_prescriptions WHERE user_id = ? AND exercise_id = ?',
       [DEFAULT_USER_ID, exerciseId]
     );
     if (row) {

@@ -37,9 +37,47 @@ export async function getPainTrend(days: number = 7): Promise<{ date: string; av
 
 export async function getAssessments(): Promise<{ date: string; dash_score: number | null; prwe_score: number | null; rom_degrees: number | null }[]> {
   const db = await getDatabase();
-  const rows = await db.getAllAsync<any>(
+  const rows = await db.getAllAsync<{ date: string; dash_score: number | null; prwe_score: number | null; rom_degrees: number | null }>(
     `SELECT date, dash_score, prwe_score, rom_degrees FROM assessments WHERE user_id = ? ORDER BY date DESC LIMIT 30`,
     [USER_ID]
   );
   return rows ?? [];
+}
+
+export async function getCurrentStreak(): Promise<number> {
+  const db = await getDatabase();
+  const rows = await db.getAllAsync<{ date: string }>(
+    `SELECT DISTINCT date(timestamp) as date FROM logs WHERE user_id = ? ORDER BY date DESC`,
+    [USER_ID]
+  );
+
+  if (!rows || rows.length === 0) return 0;
+
+  let streak = 0;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  let currentDate = new Date(today);
+
+  for (let i = 0; i < rows.length; i++) {
+    const rowDate = new Date(rows[i].date);
+    rowDate.setHours(0, 0, 0, 0);
+
+    const diffDays = Math.round((currentDate.getTime() - rowDate.getTime()) / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) {
+      // Match current expected day
+      streak++;
+      currentDate.setDate(currentDate.getDate() - 1);
+    } else if (diffDays === 1 && streak === 0 && i === 0) {
+      // Didn't log today, but logged yesterday. Current date becomes yesterday - 1.
+      streak++;
+      currentDate.setDate(currentDate.getDate() - 2);
+    } else {
+      // Gap in days, streak broken
+      break;
+    }
+  }
+
+  return streak;
 }

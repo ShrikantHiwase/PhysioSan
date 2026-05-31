@@ -39,6 +39,7 @@ export interface Database {
           id: string;
           name: string;
           video_url: string | null;
+          gif_url?: string | null;
           description: string | null;
           phase: 1 | 2 | 3;
           created_at: string;
@@ -48,6 +49,7 @@ export interface Database {
           id?: string;
           name: string;
           video_url?: string | null;
+          gif_url?: string | null;
           description?: string | null;
           phase: 1 | 2 | 3;
           created_at?: string;
@@ -57,6 +59,7 @@ export interface Database {
           id?: string;
           name?: string;
           video_url?: string | null;
+          gif_url?: string | null;
           description?: string | null;
           phase?: 1 | 2 | 3;
           created_at?: string;
