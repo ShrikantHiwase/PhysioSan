@@ -87,6 +87,14 @@ export default function ExercisePlayerScreen() {
     return () => clearInterval(interval);
   }, [isRunning, phase]);
 
+  useEffect(() => {
+    return () => {
+      if (holdIntervalRef.current) {
+        clearInterval(holdIntervalRef.current);
+      }
+    };
+  }, []);
+
   const startHold = () => {
     setPhase('hold');
     setHoldCountdown(holdNum);
