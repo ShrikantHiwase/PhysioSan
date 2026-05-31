@@ -12,13 +12,13 @@ export const useAssessmentStore = create<AssessmentState>((set, get) => ({
   saveAssessment: async (data) => {
     const db = await getDatabase();
     const today = new Date().toISOString().split('T')[0];
-    const existing = await db.getFirstAsync<any>(
+    const existing = await db.getFirstAsync<{ id: string }>(
       'SELECT id FROM assessments WHERE user_id = ? AND date = ?',
       [USER_ID, today]
     );
     if (existing) {
       const updates: string[] = [];
-      const values: (number | null)[] = [];
+      const values: (string | number | null)[] = [];
       if (data.dash_score !== undefined) {
         updates.push('dash_score = ?');
         values.push(data.dash_score ?? null);
@@ -35,7 +35,7 @@ export const useAssessmentStore = create<AssessmentState>((set, get) => ({
         values.push(existing.id);
         await db.runAsync(
           `UPDATE assessments SET ${updates.join(', ')} WHERE id = ?`,
-          values as (string | number | null)[]
+          values
         );
       }
     } else {

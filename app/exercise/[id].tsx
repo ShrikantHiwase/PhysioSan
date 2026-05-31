@@ -15,6 +15,8 @@ import { PHYSIO_EXERCISES } from '../../src/data/physioExercises';
 import { usePrescriptionStore } from '../../src/stores/prescriptionStore';
 import { PainFeedbackModal } from '../../src/components/PainFeedbackModal';
 import { ExerciseMedia } from '../../src/components/ExerciseMedia';
+import { PrescriptionEditor } from '../../src/components/exercise/PrescriptionEditor';
+import { ExerciseTimer } from '../../src/components/exercise/ExerciseTimer';
 import { getExerciseGifSource } from '../../src/data/exerciseGifs';
 import { logExerciseCompletion } from '../../src/db/queries/logs';
 
@@ -182,78 +184,17 @@ export default function ExercisePlayerScreen() {
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Therapist prescription - editable */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Ionicons name="medical-outline" size={22} color={PhysioColors.primary} />
-            <Text style={styles.sectionTitle}>Therapist Prescription</Text>
-            <Pressable
-              onPress={() => {
-                if (isEditing) handleSavePrescription();
-                else setIsEditing(true);
-              }}
-              style={styles.editBtn}
-            >
-              <Text style={styles.editBtnText}>
-                {isEditing ? 'Save' : 'Edit'}
-              </Text>
-            </Pressable>
-          </View>
-          <Text style={styles.sectionHint}>
-            Enter the sets, reps, and hold time as prescribed by your therapist
-          </Text>
-
-          {isEditing ? (
-            <View style={styles.prescriptionForm}>
-              <View style={styles.inputRow}>
-                <Text style={styles.inputLabel}>Sets</Text>
-                <TextInput
-                  style={styles.input}
-                  value={sets}
-                  onChangeText={setSets}
-                  keyboardType="number-pad"
-                  placeholder="3"
-                  placeholderTextColor={PhysioColors.textMuted}
-                />
-              </View>
-              <View style={styles.inputRow}>
-                <Text style={styles.inputLabel}>Reps</Text>
-                <TextInput
-                  style={styles.input}
-                  value={reps}
-                  onChangeText={setReps}
-                  keyboardType="number-pad"
-                  placeholder="10"
-                  placeholderTextColor={PhysioColors.textMuted}
-                />
-              </View>
-              <View style={styles.inputRow}>
-                <Text style={styles.inputLabel}>Hold (seconds)</Text>
-                <TextInput
-                  style={styles.input}
-                  value={holdSeconds}
-                  onChangeText={setHoldSeconds}
-                  keyboardType="number-pad"
-                  placeholder="5"
-                  placeholderTextColor={PhysioColors.textMuted}
-                />
-              </View>
-              <Pressable
-                onPress={handleSavePrescription}
-                style={({ pressed }) => [styles.saveBtn, pressed && styles.saveBtnPressed]}
-              >
-                <Text style={styles.saveBtnText}>Save Prescription</Text>
-              </Pressable>
-            </View>
-          ) : (
-            <View style={styles.prescriptionSummary}>
-              <Text style={styles.summaryText}>
-                {setsNum} sets × {repsNum} reps
-                {holdNum > 0 ? `, hold ${holdNum} sec` : ''}
-              </Text>
-            </View>
-          )}
-        </View>
+        <PrescriptionEditor
+          isEditing={isEditing}
+          setIsEditing={setIsEditing}
+          sets={sets}
+          setSets={setSets}
+          reps={reps}
+          setReps={setReps}
+          holdSeconds={holdSeconds}
+          setHoldSeconds={setHoldSeconds}
+          onSave={handleSavePrescription}
+        />
 
         {/* Exercise content + voice cue */}
         <View style={styles.mediaSection}>
@@ -279,49 +220,18 @@ export default function ExercisePlayerScreen() {
           <Text style={styles.setLabel}>Set {currentSet} of {setsNum}</Text>
         </View>
 
-        <View style={styles.timerSection}>
-          <Text style={styles.timerLabel}>Timer</Text>
-          <Text style={styles.timerValue}>
-            {Math.floor(timerSeconds / 60)}:{(timerSeconds % 60).toString().padStart(2, '0')}
-          </Text>
-          {!exerciseComplete ? (
-            <>
-              <View style={styles.controlRow}>
-                <Pressable
-                  onPress={() => setIsRunning(!isRunning)}
-                  style={[styles.timerBtn, styles.timerBtnHalf]}
-                >
-                  <Text style={styles.timerBtnText}>{isRunning ? 'Pause' : 'Start'}</Text>
-                </Pressable>
-                {holdNum > 0 && (
-                  <Pressable
-                    onPress={startHold}
-                    disabled={phase === 'hold'}
-                    style={[styles.timerBtn, styles.timerBtnHalf, phase === 'hold' && styles.btnDisabled]}
-                  >
-                    <Text style={styles.timerBtnText}>Hold {holdNum}s</Text>
-                  </Pressable>
-                )}
-              </View>
-              <Pressable
-                onPress={completeSet}
-                style={[styles.completeBtn, { minHeight: PhysioTouchTarget.large }]}
-              >
-                <Text style={styles.completeBtnText}>Complete Set</Text>
-              </Pressable>
-            </>
-          ) : (
-            <Pressable
-              onPress={handleNextExercise}
-              style={[styles.nextBtn, { minHeight: PhysioTouchTarget.large }]}
-            >
-              <Text style={styles.nextBtnText}>
-                {nextExercise ? `Next: ${nextExercise.name}` : 'Done for Today'}
-              </Text>
-              <Ionicons name={nextExercise ? "arrow-forward" : "checkmark"} size={20} color="#fff" />
-            </Pressable>
-          )}
-        </View>
+        <ExerciseTimer
+          timerSeconds={timerSeconds}
+          isRunning={isRunning}
+          setIsRunning={setIsRunning}
+          holdNum={holdNum}
+          phase={phase}
+          startHold={startHold}
+          exerciseComplete={exerciseComplete}
+          completeSet={completeSet}
+          handleNextExercise={handleNextExercise}
+          nextExerciseName={nextExercise?.name || null}
+        />
       </ScrollView>
 
       <PainFeedbackModal
@@ -355,75 +265,6 @@ const styles = StyleSheet.create({
     color: PhysioColors.textPrimary,
   },
   scrollContent: { padding: 20, paddingBottom: 40 },
-  section: {
-    backgroundColor: PhysioColors.surface,
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 24,
-    borderWidth: 1,
-    borderColor: PhysioColors.cardBorder,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginBottom: 8,
-  },
-  sectionTitle: {
-    flex: 1,
-    fontSize: 18,
-    fontWeight: '700',
-    color: PhysioColors.textPrimary,
-  },
-  editBtn: { padding: 4 },
-  editBtnText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: PhysioColors.primary,
-  },
-  sectionHint: {
-    fontSize: 13,
-    color: PhysioColors.textMuted,
-    marginBottom: 16,
-  },
-  prescriptionForm: { gap: 12 },
-  inputRow: { gap: 6 },
-  inputLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: PhysioColors.textSecondary,
-  },
-  input: {
-    backgroundColor: PhysioColors.background,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 16,
-    color: PhysioColors.textPrimary,
-    borderWidth: 1,
-    borderColor: PhysioColors.cardBorder,
-  },
-  saveBtn: {
-    marginTop: 8,
-    paddingVertical: 14,
-    borderRadius: 12,
-    backgroundColor: PhysioColors.primary,
-    alignItems: 'center',
-  },
-  saveBtnPressed: { opacity: 0.9 },
-  saveBtnText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
-  },
-  prescriptionSummary: {
-    paddingVertical: 8,
-  },
-  summaryText: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: PhysioColors.textPrimary,
-  },
   mediaSection: {
     marginBottom: 24,
     alignItems: 'center',
@@ -502,38 +343,5 @@ const styles = StyleSheet.create({
     color: PhysioColors.textSecondary,
     lineHeight: 26,
     marginBottom: 24,
-  },
-  timerSection: {
-    alignItems: 'center',
-    padding: 24,
-    backgroundColor: PhysioColors.surface,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: PhysioColors.cardBorder,
-  },
-  timerLabel: {
-    fontSize: PhysioFontSize.sm,
-    color: PhysioColors.textMuted,
-    marginBottom: 8,
-  },
-  timerValue: {
-    fontSize: 48,
-    fontWeight: '700',
-    color: PhysioColors.primary,
-    fontVariant: ['tabular-nums'],
-  },
-  timerBtn: {
-    marginTop: 20,
-    paddingHorizontal: 32,
-    paddingVertical: 16,
-    backgroundColor: PhysioColors.primary,
-    borderRadius: 14,
-    minWidth: 140,
-    alignItems: 'center',
-  },
-  timerBtnText: {
-    fontSize: PhysioFontSize.lg,
-    fontWeight: '700',
-    color: PhysioColors.textInverse,
   },
 });

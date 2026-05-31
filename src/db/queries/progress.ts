@@ -37,7 +37,7 @@ export async function getPainTrend(days: number = 7): Promise<{ date: string; av
 
 export async function getAssessments(): Promise<{ date: string; dash_score: number | null; prwe_score: number | null; rom_degrees: number | null }[]> {
   const db = await getDatabase();
-  const rows = await db.getAllAsync<any>(
+  const rows = await db.getAllAsync<{ date: string; dash_score: number | null; prwe_score: number | null; rom_degrees: number | null }>(
     `SELECT date, dash_score, prwe_score, rom_degrees FROM assessments WHERE user_id = ? ORDER BY date DESC LIMIT 30`,
     [USER_ID]
   );

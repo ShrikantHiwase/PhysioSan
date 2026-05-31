@@ -22,6 +22,8 @@ import { PHYSIO_EXERCISES, PhysioExercise } from '../../src/data/physioExercises
 import { getExerciseGifSource } from '../../src/data/exerciseGifs';
 import { supabase, isSupabaseConfigured } from '../../src/lib/supabase';
 import { usePrescriptionStore } from '../../src/stores/prescriptionStore';
+import { LoadingState } from '../../src/components/ui/LoadingState';
+import { ErrorState } from '../../src/components/ui/ErrorState';
 import type { Exercise as SupabaseExercise } from '../../src/types/database';
 
 const PHASE_LABELS: Record<1 | 2 | 3, string> = {
@@ -37,10 +39,12 @@ export default function DailyExercisesScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [useSupabase, setUseSupabase] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [prescriptions, setPrescriptions] = useState<Record<string, { sets: number; reps: number; hold_seconds: number }>>({});
   const getPrescription = usePrescriptionStore((s) => s.getPrescription);
 
   const loadExercises = useCallback(async () => {
+    setError(null);
     if (!isSupabaseConfigured()) {
       setExercises(PHYSIO_EXERCISES);
       setLoading(false);
@@ -65,7 +69,7 @@ export default function DailyExercisesScreen() {
             description: e.description ?? '',
             phase: e.phase as 1 | 2 | 3,
             video_url: e.video_url ?? undefined,
-            gif_url: (e as any).gif_url ?? undefined,
+            gif_url: e.gif_url ?? undefined,
             sets: 3,
             reps: '10',
           }))
@@ -73,7 +77,9 @@ export default function DailyExercisesScreen() {
       } else {
         setExercises(PHYSIO_EXERCISES);
       }
-    } catch {
+    } catch (e: any) {
+      console.error(e);
+      setError('Failed to load exercises.');
       setExercises(PHYSIO_EXERCISES);
     } finally {
       setLoading(false);
@@ -131,12 +137,11 @@ export default function DailyExercisesScreen() {
   );
 
   if (loading) {
-    return (
-      <View style={[styles.container, styles.centered, { paddingTop: insets.top }]}>
-        <ActivityIndicator size="large" color={PhysioColors.primary} />
-        <Text style={styles.loadingText}>Loading exercises...</Text>
-      </View>
-    );
+    return <LoadingState message="Loading exercises..." />;
+  }
+
+  if (error && exercises.length === 0) {
+    return <ErrorState message={error} onRetry={loadExercises} />;
   }
 
   return (
